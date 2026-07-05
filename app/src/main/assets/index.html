@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кристалл Кликер</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #0f0c29, #302b63);
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            height: 100vh;
+        }
+        .container { padding: 20px; }
+        .score { font-size: 2.8em; margin: 20px 0; font-weight: bold; }
+        .clicker {
+            width: 260px;
+            height: 260px;
+            margin: 30px auto;
+            background: radial-gradient(circle, #00ffff, #0088ff);
+            border-radius: 50%;
+            font-size: 5.5em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 50px #00ffff;
+        }
+        .item {
+            background: rgba(255,255,255,0.1);
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #00ffff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💎 Космический Кликер</h1>
+        <div class="score" id="score">0</div>
+        <div id="cps">0 кристаллов/сек</div>
+        
+        <div class="clicker" id="clicker">💎</div>
+        
+        <div id="shop"></div>
+    </div>
+
+    <script>
+        let crystals = 0;
+        let cps = 0;
+        let items = [
+            {name: "🚀 Дрон", cost: 20, prod: 1, owned: 0},
+            {name: "🔦 Лазер", cost: 120, prod: 8, owned: 0},
+            {name: "🌌 Ферма", cost: 500, prod: 30, owned: 0},
+            {name: "⛏️ Шахта", cost: 2000, prod: 120, owned: 0}
+        ];
+
+        const scoreEl = document.getElementById('score');
+        const cpsEl = document.getElementById('cps');
+        const clicker = document.getElementById('clicker');
+
+        clicker.addEventListener('click', () => {
+            crystals += 1;
+            scoreEl.textContent = Math.floor(crystals);
+        });
+
+        function updateCPS() {
+            cps = items.reduce((sum, item) => sum + item.prod * item.owned, 0);
+            cpsEl.textContent = cps.toFixed(1) + " кристаллов/сек";
+        }
+
+        function renderShop() {
+            let html = '';
+            items.forEach((item, i) => {
+                html += `
+                    <div class="item">
+                        <strong>\( {item.name} ( \){item.owned})</strong><br>
+                        +${item.prod} к/сек<br>
+                        Цена: ${Math.floor(item.cost)} 💎<br>
+                        <button onclick="buy(${i})">Купить</button>
+                    </div>`;
+            });
+            document.getElementById('shop').innerHTML = html;
+        }
+
+        window.buy = function(i) {
+            const item = items[i];
+            if (crystals >= item.cost) {
+                crystals -= item.cost;
+                item.owned++;
+                item.cost = Math.floor(item.cost * 1.18);
+                scoreEl.textContent = Math.floor(crystals);
+                updateCPS();
+                renderShop();
+            }
+        };
+
+        // Автосохранение каждые 5 секунд
+        setInterval(() => {
+            localStorage.setItem('clickerSave', JSON.stringify({crystals, items}));
+        }, 5000);
+
+        // Загрузка сохранения
+        const saved = localStorage.getItem('clickerSave');
+        if (saved) {
+            const data = JSON.parse(saved);
+            crystals = data.crystals || 0;
+            items = data.items || items;
+        }
+
+        scoreEl.textContent = Math.floor(crystals);
+        updateCPS();
+        renderShop();
+
+        // Автодобыча
+        setInterval(() => {
+            crystals += cps / 10;
+            scoreEl.textContent = Math.floor(crystals);
+        }, 100);
+    </script>
+</body>
+  </html>
